@@ -75,8 +75,9 @@ class RegressionModel(object):
 
     def __init__(self) -> None:
         # Initialize your model parameters here
+        self.maximal_loss = 0.005
         self.batch_size = 10  # Set the batch size for training
-        self.learning_rate = 0.0005 * self.batch_size  # Set the learning rate
+        self.learning_rate = 0.05  # Set the learning rate
         self.n = 3  # Set the number of layers
         self.dim = 100  # Set the dimension of each layer
         self.w = []  # Initialize the list to store the weights
@@ -157,7 +158,7 @@ class RegressionModel(object):
                 self.b[i].update(grad[self.n + i], -self.learning_rate)  # Update the biases
 
             # Check if we have completed a full epoch and the average loss is below the threshold
-            if iteration == epoch_size and total_loss / iteration < 0.02:
+            if iteration == epoch_size and total_loss / iteration < self.maximal_loss:
                 break  # Exit the training loop
 
 
