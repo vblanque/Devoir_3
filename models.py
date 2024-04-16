@@ -75,7 +75,7 @@ class RegressionModel(object):
 
     def __init__(self) -> None:
         # Initialize your model parameters here
-        self.maximal_loss = 0.005
+        self.maximal_loss = 0.005 #0.02 is enough 
         self.batch_size = 10  # Set the batch size for training
         self.learning_rate = 0.05  # Set the learning rate
         self.n = 3  # Set the number of layers
