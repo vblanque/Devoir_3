@@ -28,7 +28,7 @@ class PerceptronModel(object):
             x: a node with shape (1 x dimensions)
         Returns: a node containing a single number (the score)
         """
-        "*** TODO: COMPLETE HERE FOR QUESTION 1 ***"
+        return nn.DotProduct(x, self.w)
 
     def get_prediction(self, x: nn.Constant) -> int:
         """
@@ -36,14 +36,35 @@ class PerceptronModel(object):
 
         Returns: 1 or -1
         """
-        "*** TODO: COMPLETE HERE FOR QUESTION 1 ***"
+        if(nn.as_scalar(self.run(x))) >= 0:
+            return 1
+        else:
+            return -1
 
     def train(self, dataset: PerceptronDataset) -> None:
         """
         Train the perceptron until convergence.
         """
-        "*** TODO: COMPLETE HERE FOR QUESTION 1 ***"
+        # Initialize the mistake flag
+        mistake = True
 
+        # Continue training until no mistakes are made
+        while mistake:
+            # Reset the mistake flag
+            mistake = False
+
+            # Iterate over the dataset
+            for x, y in dataset.iterate_once(1):
+                # Check if the prediction is incorrect
+                if self.get_prediction(x) != nn.as_scalar(y):
+                    # Update the weights
+                    self.w.update(x, nn.as_scalar(y))
+
+                    # Set the mistake flag to True
+                    mistake = True
+
+        
+        
 
 class RegressionModel(object):
     """
