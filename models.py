@@ -75,22 +75,22 @@ class RegressionModel(object):
 
     def __init__(self) -> None:
         # Initialize your model parameters here
-        self.batch_size = 10
-        self.learning_rate = 0.0005 * self.batch_size
-        self.n = 3
-        self.dim = 100
-        self.w = []
-        self.b = []
+        self.batch_size = 10  # Set the batch size for training
+        self.learning_rate = 0.0005 * self.batch_size  # Set the learning rate
+        self.n = 3  # Set the number of layers
+        self.dim = 100  # Set the dimension of each layer
+        self.w = []  # Initialize the list to store the weights
+        self.b = []  # Initialize the list to store the biases
         for i in range(self.n):
             if(i==0):
-                self.w.append(nn.Parameter(1, self.dim))
-                self.b.append(nn.Parameter(1, self.dim))
+                self.w.append(nn.Parameter(1, self.dim))  # weights for the first layer
+                self.b.append(nn.Parameter(1, self.dim))  # biases for the first layer
             elif(i==self.n-1):
-                self.w.append(nn.Parameter(self.dim, 1))
-                self.b.append(nn.Parameter(1, 1))
+                self.w.append(nn.Parameter(self.dim, 1))  # weights for the last layer
+                self.b.append(nn.Parameter(1, 1))  # biases for the last layer
             else:
-                self.w.append(nn.Parameter(self.dim, self.dim))
-                self.b.append(nn.Parameter(1, self.dim))
+                self.w.append(nn.Parameter(self.dim, self.dim))  # weights for the hidden layers
+                self.b.append(nn.Parameter(1, self.dim))  # biases for the hidden layers
 
     def run(self, x: nn.Constant) -> nn.Node:
         """
@@ -101,9 +101,14 @@ class RegressionModel(object):
         Returns:
             A node with shape (batch_size x 1) containing predicted y-values
         """
+        # Apply ReLU activation function to the input layer
         res = nn.ReLU(nn.AddBias(nn.Linear(x, self.w[0]), self.b[0]))
+
+        # Apply ReLU activation function to the hidden layers
         for i in range(1, self.n-1, 1):
             res = nn.ReLU(nn.AddBias(nn.Linear(res, self.w[i]), self.b[i]))
+
+        # Apply linear transformation to the output layer
         return nn.AddBias(nn.Linear(res, self.w[self.n-1]), self.b[self.n-1])
 
     def get_loss(self, x: nn.Constant, y: nn.Constant) -> nn.Node:
@@ -116,30 +121,44 @@ class RegressionModel(object):
                 to be used for training
         Returns: a loss node
         """
+        # Calculate the predicted y-values
         predicted_y = self.run(x)
-        return nn.SquareLoss(predicted_y , y)
+
+        # Compute the square loss between predicted y-values and true y-values
+        loss = nn.SquareLoss(predicted_y, y)
+
+        return loss
 
     def train(self, dataset: RegressionDataset) -> None:
         """
         Trains the model.
         """
-        total_loss = 0
-        epoch_size = dataset.x.shape[0]
-        iteration = 0
-        for x, y in dataset.iterate_forever(self.batch_size):
-            iteration += 1
-            if iteration > epoch_size:
-                iteration = 1
-                total_loss = 0
-            loss = self.get_loss(x, y)
-            total_loss += nn.as_scalar(loss)
-            grad = nn.gradients(loss, self.w + self.b)
-            for i in range(self.n):
-                self.w[i].update(grad[i], -self.learning_rate)
-                self.b[i].update(grad[self.n + i], -self.learning_rate)
+        total_loss = 0  # Initialize the total loss variable
+        epoch_size = dataset.x.shape[0]  # Get the size of the dataset
+        iteration = 0  # Initialize the iteration counter
 
+        # Iterate over the dataset indefinitely
+        for x, y in dataset.iterate_forever(self.batch_size):
+            iteration += 1  # Increment the iteration counter
+
+            # Check if we have completed a full epoch
+            if iteration > epoch_size:
+                iteration = 1  # Reset the iteration counter
+                total_loss = 0  # Reset the total loss
+
+            loss = self.get_loss(x, y)  # Calculate the loss
+            total_loss += nn.as_scalar(loss)  # Update the total loss
+
+            grad = nn.gradients(loss, self.w + self.b)  # Calculate the gradients
+
+            # Update the weights and biases for each layer
+            for i in range(self.n):
+                self.w[i].update(grad[i], -self.learning_rate)  # Update the weights
+                self.b[i].update(grad[self.n + i], -self.learning_rate)  # Update the biases
+
+            # Check if we have completed a full epoch and the average loss is below the threshold
             if iteration == epoch_size and total_loss / iteration < 0.02:
-                break
+                break  # Exit the training loop
 
 
 class DigitClassificationModel(object):
