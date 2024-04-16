@@ -179,7 +179,25 @@ class DigitClassificationModel(object):
 
     def __init__(self) -> None:
         # Initialize your model parameters here
-        "*** TODO: COMPLETE HERE FOR QUESTION 3 ***"
+        # Initialize your model parameters here
+        self.input_size = 784  # Set the input size
+        self.output_size = 10 # Set the output size
+        self.batch_size = 200  # Set the batch size for training
+        self.learning_rate = 0.001 * self.batch_size  # Set the learning rate
+        self.n = 4  # Set the number of layers
+        self.dim = 1000  # Set the dimension of each layer
+        self.w = []  # Initialize the list to store the weights
+        self.b = []  # Initialize the list to store the biases
+        for i in range(self.n):
+            if(i==0):
+                self.w.append(nn.Parameter(self.input_size, self.dim))  # weights for the first layer
+                self.b.append(nn.Parameter(1, self.dim))  # biases for the first layer
+            elif(i==self.n-1):
+                self.w.append(nn.Parameter(self.dim, self.output_size))  # weights for the last layer
+                self.b.append(nn.Parameter(1, self.output_size))  # biases for the last layer
+            else:
+                self.w.append(nn.Parameter(self.dim, self.dim))  # weights for the hidden layers
+                self.b.append(nn.Parameter(1, self.dim))  # biases for the hidden layers
 
     def run(self, x: nn.Constant) -> nn.Node:
         """
@@ -195,7 +213,15 @@ class DigitClassificationModel(object):
             A node with shape (batch_size x 10) containing predicted scores
                 (also called logits)
         """
-        "*** TODO: COMPLETE HERE FOR QUESTION 3 ***"
+        # Apply ReLU activation function to the input layer
+        res = nn.ReLU(nn.AddBias(nn.Linear(x, self.w[0]), self.b[0]))
+
+        # Apply ReLU activation function to the hidden layers
+        for i in range(1, self.n-1, 1):
+            res = nn.ReLU(nn.AddBias(nn.Linear(res, self.w[i]), self.b[i]))
+
+        # Apply linear transformation to the output layer
+        return nn.AddBias(nn.Linear(res, self.w[self.n-1]), self.b[self.n-1])
 
     def get_loss(self, x: nn.Constant, y: nn.Constant) -> nn.Node:
         """
@@ -210,10 +236,41 @@ class DigitClassificationModel(object):
             y: a node with shape (batch_size x 10)
         Returns: a loss node
         """
-        "*** TODO: COMPLETE HERE FOR QUESTION 3 ***"
+        # Calculate the predicted y-values
+        predicted_y = self.run(x)
+
+        # Compute the square loss between predicted y-values and true y-values
+        loss = nn.SoftmaxLoss(predicted_y, y)
+
+        return loss
 
     def train(self, dataset: DigitClassificationDataset) -> None:
         """
         Trains the model.
         """
-        "*** TODO: COMPLETE HERE FOR QUESTION 3 ***"
+        epoch_size = dataset.x.shape[0]/self.batch_size  # Get the size of the dataset
+        iteration = 0  # Initialize the iteration counter
+        print(f"epoch_size = {epoch_size}")
+
+        # Iterate over the dataset indefinitely
+        for x, y in dataset.iterate_forever(self.batch_size):
+            iteration += 1  # Increment the iteration counter
+            print(f"iteration = {iteration}")
+
+            # Check if we have completed a full epoch
+            if iteration > epoch_size:
+                iteration = 1  # Reset the iteration counter
+
+            loss = self.get_loss(x, y)  # Calculate the loss
+            grad = nn.gradients(loss, self.w + self.b)  # Calculate the gradients
+
+            # Update the weights and biases for each layer
+            for i in range(self.n):
+                self.w[i].update(grad[i], -self.learning_rate)  # Update the weights
+                self.b[i].update(grad[self.n + i], -self.learning_rate)  # Update the biases
+
+            # Check if we have completed a full epoch and the average loss is below the threshold
+            if iteration == epoch_size:
+                print(f"validation_accurac = {dataset.get_validation_accuracy()}")
+                if dataset.get_validation_accuracy() > 0.97:
+                    break  # Exit the training loop
