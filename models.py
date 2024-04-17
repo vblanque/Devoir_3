@@ -250,12 +250,10 @@ class DigitClassificationModel(object):
         """
         epoch_size = dataset.x.shape[0]/self.batch_size  # Get the size of the epoch (nbr of batch)
         iteration = 0  # Initialize the iteration counter
-        print(f"epoch_size = {epoch_size}")
 
         # Iterate over the dataset indefinitely
         for x, y in dataset.iterate_forever(self.batch_size):
             iteration += 1  # Increment the iteration counter
-            print(f"iteration = {iteration}")
 
             # Check if we have completed a full epoch
             if iteration > epoch_size:
