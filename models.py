@@ -1,6 +1,5 @@
 import nn
 from backend import PerceptronDataset, RegressionDataset, DigitClassificationDataset
-import time
 
 
 class PerceptronModel(object):
@@ -180,13 +179,13 @@ class DigitClassificationModel(object):
 
     def __init__(self) -> None:
         # Initialize your model parameters here
-        # Initialize your model parameters here
+        self.required_precsision = 0.974
         self.input_size = 784  # Set the input size
         self.output_size = 10 # Set the output size
-        self.batch_size = 300  # Set the batch size for training
-        self.learning_rate = 0.5  # Set the learning rate
+        self.batch_size = 200  # Set the batch size for training
+        self.learning_rate = 0.6  # Set the learning rate
         self.n = 4  # Set the number of layers
-        self.dim = 100  # Set the dimension of each layer
+        self.dim = 300  # Set the dimension of each layer
         self.w = []  # Initialize the list to store the weights
         self.b = []  # Initialize the list to store the biases
         for i in range(self.n):
@@ -249,8 +248,7 @@ class DigitClassificationModel(object):
         """
         Trains the model.
         """
-        start = time.time()
-        epoch_size = dataset.x.shape[0]/self.batch_size  # Get the size of the dataset
+        epoch_size = dataset.x.shape[0]/self.batch_size  # Get the size of the epoch (nbr of batch)
         iteration = 0  # Initialize the iteration counter
         print(f"epoch_size = {epoch_size}")
 
@@ -270,16 +268,16 @@ class DigitClassificationModel(object):
             for i in range(self.n):
                 self.w[i].update(grad[i], -self.learning_rate)  # Update the weights
                 self.b[i].update(grad[self.n + i], -self.learning_rate)  # Update the biases
-
+            
             # Check if we have completed a full epoch and the average loss is below the threshold
             if iteration == epoch_size:
-                print(f"validation_accurac = {dataset.get_validation_accuracy()}")
-                if dataset.get_validation_accuracy() > 0.95:
-                    stop = time.time()
-                    total_time = stop - start
-                    print("Time take for 95% : ", total_time)
-                if dataset.get_validation_accuracy() > 0.97:
-                    stop = time.time()
-                    total_time = stop - start
-                    print("Time taken : ", total_time)
+                accuracy = dataset.get_validation_accuracy()
+                print(f"validation_accuracy = {accuracy}")
+                # Adjust lerning rate with current accuracy
+                if accuracy > 0.91:
+                    self.learning_rate = 0.4
+                if accuracy > 0.96:
+                    self.learning_rate = 0.3
+                # Stop the training
+                if accuracy > self.required_precsision:
                     break  # Exit the training loop
