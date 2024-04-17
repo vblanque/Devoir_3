@@ -179,7 +179,7 @@ class DigitClassificationModel(object):
 
     def __init__(self) -> None:
         # Initialize your model parameters here
-        self.required_precsision = 0.974
+        self.required_precsision = 0.9735
         self.input_size = 784  # Set the input size
         self.output_size = 10 # Set the output size
         self.batch_size = 200  # Set the batch size for training
